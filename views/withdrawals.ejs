@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdrawals</title>
+</head>
+<body>
+    <h1>Withdrawals</h1>
+    <table>
+        <tr>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Member</th>
+            <th>Company</th>
+        </tr>
+        <% withdrawals.forEach(withdrawal => { %>
+        <tr>
+            <td><%= withdrawal.amount %></td>
+            <td><%= withdrawal.date.toISOString().slice(0, 10) %></td>
+            <td><%= withdrawal.member ? withdrawal.member.name : 'N/A' %></td>
+            <td><%= withdrawal.company ? withdrawal.company.name : 'N/A' %></td>
+        </tr>
+        <% }); %>
+    </table>
+    <a href="/">Home</a>
+</body>
+</html>

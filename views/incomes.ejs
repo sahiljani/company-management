@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incomes</title>
+</head>
+<body>
+    <h1>Incomes</h1>
+    <table>
+        <tr>
+            <th>Title</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Member</th>
+            <th>Company</th>
+        </tr>
+        <% incomes.forEach(income => { %>
+        <tr>
+            <td><%= income.title %></td>
+            <td><%= income.amount %></td>
+            <td><%= income.date.toISOString().slice(0, 10) %></td>
+            <td><%= income.member ? income.member.name : 'N/A' %></td>
+            <td><%= income.company ? income.company.name : 'N/A' %></td>
+        </tr>
+        <% }); %>
+    </table>
+    <a href="/">Home</a>
+</body>
+</html>

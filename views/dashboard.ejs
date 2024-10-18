@@ -1,0 +1,42 @@
+<%- include('layout') %>
+
+<h1>Dashboard</h1>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <h4>Total Members</h4>
+        <p><%= members.length %></p>
+    </div>
+    <div class="col-md-4">
+        <h4>Total Expenses</h4>
+        <p><%= expenses.reduce((total, expense) => total + expense.amount, 0) %></p>
+    </div>
+    <div class="col-md-4">
+        <h4>Total Incomes</h4>
+        <p><%= incomes.reduce((total, income) => total + income.amount, 0) %></p>
+    </div>
+</div>
+
+<h3>Recent Activities</h3>
+<table class="table mt-4">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% [...expenses, ...incomes].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(activity => { %>
+        <tr>
+            <td><%= activity._id %></td>
+            <td><%= activity.title %></td>
+            <td><%= activity.amount %></td>
+            <td><%= new Date(activity.date).toLocaleDateString() %></td>
+            <td><%= activity.amount > 0 ? 'Income' : 'Expense' %></td>
+        </tr>
+        <% }) %>
+    </tbody>
+</table>

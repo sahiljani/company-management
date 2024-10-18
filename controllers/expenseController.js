@@ -1,4 +1,5 @@
 const Expense = require('../models/Expense');
+const Member = require('../models/Member');
 
 // Create a new expense
 exports.createExpense = async (req, res) => {
@@ -14,10 +15,13 @@ exports.createExpense = async (req, res) => {
 // Get all expenses
 exports.getExpenses = async (req, res) => {
     try {
-        const expenses = await Expense.find().populate('member').populate('company');
-        res.render('expenses', { expenses });
+        const expenses = await Expense.find().populate('member'); // This should populate the member data
+        const members = await Member.find();
+        console.log(expenses);
+        res.render('expenses', { expenses, members });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).send('Error retrieving expenses');
     }
 };
 

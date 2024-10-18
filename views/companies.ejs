@@ -1,24 +1,147 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Companies</title>
-</head>
-<body>
-    <h1>Companies</h1>
-    <table>
+<%- include('layout', { body: '<h1>Expenses</h1>' }) %>
+
+<h1>Companies</h1>
+
+<button class="btn btn-primary" data-toggle="modal" data-target="#addCompanyModal">Add Company</button>
+<table class="table mt-4">
+    <thead>
         <tr>
+            <th>ID</th>
             <th>Name</th>
             <th>Description</th>
+            <th>Actions</th>
         </tr>
+    </thead>
+    <tbody>
         <% companies.forEach(company => { %>
         <tr>
+            <td><%= company._id %></td>
             <td><%= company.name %></td>
             <td><%= company.description %></td>
+            <td>
+                <button class="btn btn-warning" data-toggle="modal" data-target="#editCompanyModal" onclick="editCompany('<%= company._id %>', '<%= company.name %>', '<%= company.description %>')">Edit</button>
+                <button class="btn btn-danger" onclick="deleteCompany('<%= company._id %>')">Delete</button>
+            </td>
         </tr>
-        <% }); %>
-    </table>
-    <a href="/">Home</a>
-</body>
-</html>
+        <% }) %>
+    </tbody>
+</table>
+
+<!-- Add Company Modal -->
+<div class="modal fade" id="addCompanyModal" tabindex="-1" role="dialog" aria-labelledby="addCompanyModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCompanyModalLabel">Add Company</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addCompanyForm">
+                    <div class="form-group">
+                        <label for="companyName">Name</label>
+                        <input type="text" class="form-control" id="companyName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="companyDescription">Description</label>
+                        <textarea class="form-control" id="companyDescription" name="description" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Company</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Company Modal -->
+<div class="modal fade" id="editCompanyModal" tabindex="-1" role="dialog" aria-labelledby="editCompanyModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCompanyModalLabel">Edit Company</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editCompanyForm">
+                    <input type="hidden" id="editCompanyId" name="id">
+                    <div class="form-group">
+                        <label for="editCompanyName">Name</label>
+                        <input type="text" class="form-control" id="editCompanyName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCompanyDescription">Description</label>
+                        <textarea class="form-control" id="editCompanyDescription" name="description" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function editCompany(id, name, description) {
+        document.getElementById('editCompanyId').value = id;
+        document.getElementById('editCompanyName').value = name;
+        document.getElementById('editCompanyDescription').value = description;
+    }
+
+    document.getElementById('addCompanyForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+        const response = await fetch('/companies/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            location.reload();
+        } else {
+            alert('Error adding company: ' + result.message);
+        }
+    });
+
+    document.getElementById('editCompanyForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+        const response = await fetch(`/companies/edit/${data.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            location.reload();
+        } else {
+            alert('Error updating company: ' + result.message);
+        }
+    });
+
+    function deleteCompany(id) {
+        if (confirm('Are you sure you want to delete this company?')) {
+            fetch(`/companies/delete/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('Error deleting company: ' + result.message);
+                }
+            });
+        }
+    }
+</script>

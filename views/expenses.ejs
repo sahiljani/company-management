@@ -1,30 +1,218 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expenses</title>
-</head>
-<body>
+<%- include('layout', { body: '<h1>Expenses</h1>' }) %>
+
+<div class="container mt-4">
     <h1>Expenses</h1>
-    <table>
-        <tr>
-            <th>Title</th>
-            <th>Amount</th>
-            <th>Date</th>
-            <th>Member</th>
-            <th>Company</th>
-        </tr>
-        <% expenses.forEach(expense => { %>
-        <tr>
-            <td><%= expense.title %></td>
-            <td><%= expense.amount %></td>
-            <td><%= expense.date.toISOString().slice(0, 10) %></td>
-            <td><%= expense.member ? expense.member.name : 'N/A' %></td>
-            <td><%= expense.company ? expense.company.name : 'N/A' %></td>
-        </tr>
-        <% }); %>
+
+    <button class="btn btn-primary" data-toggle="modal" data-target="#addExpenseModal">Add Expense</button>
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Note</th>
+                <th>Member ID</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% expenses.forEach(expense => { %>
+            <tr>
+                <td><%= expense._id %></td>
+                <td><%= expense.title %></td>
+                <td><%= expense.amount %></td>
+                <td><%= new Date(expense.date).toLocaleDateString() %></td>
+                <td><%= expense.note %></td>
+                <td><%= expense.member ? expense.member._id : 'N/A' %></td> <!-- Safeguard against undefined member -->
+                <td>
+                    <button class="btn btn-warning" data-toggle="modal" data-target="#editExpenseModal" onclick="editExpense('<%= expense._id %>', '<%= expense.title %>', <%= expense.amount %>, '<%= expense.date.toISOString() %>', '<%= expense.note %>', '<%= expense.member ? expense.member._id : '' %>')">Edit</button>
+                    <button class="btn btn-danger" onclick="deleteExpense('<%= expense._id %>')">Delete</button>
+                </td>
+            </tr>
+            <% }) %>
+        </tbody>
     </table>
-    <a href="/">Home</a>
-</body>
-</html>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1" role="dialog" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addExpenseModalLabel">Add Expense</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addExpenseForm">
+                    <div class="form-group">
+                        <label for="expenseTitle">Title</label>
+                        <input type="text" class="form-control" id="expenseTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseAmount">Amount</label>
+                        <input type="number" class="form-control" id="expenseAmount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseDate">Date</label>
+                        <input type="date" class="form-control" id="expenseDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseNote">Note</label>
+                        <textarea class="form-control" id="expenseNote"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseMember">Member ID</label>
+                        <input type="text" class="form-control" id="expenseMember" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Expense</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Expense Modal -->
+<div class="modal fade" id="editExpenseModal" tabindex="-1" role="dialog" aria-labelledby="editExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editExpenseModalLabel">Edit Expense</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editExpenseForm">
+                    <input type="hidden" id="editExpenseId">
+                    <div class="form-group">
+                        <label for="editExpenseTitle">Title</label>
+                        <input type="text" class="form-control" id="editExpenseTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editExpenseAmount">Amount</label>
+                        <input type="number" class="form-control" id="editExpenseAmount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editExpenseDate">Date</label>
+                        <input type="date" class="form-control" id="editExpenseDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editExpenseNote">Note</label>
+                        <textarea class="form-control" id="editExpenseNote"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editExpenseMember">Member ID</label>
+                        <input type="text" class="form-control" id="editExpenseMember" required>
+                    </div>
+                    <button type="submit" class="btn btn-warning">Update Expense</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add Expense Function
+    document.getElementById('addExpenseForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('expenseTitle').value;
+        const amount = document.getElementById('expenseAmount').value;
+        const date = document.getElementById('expenseDate').value;
+        const note = document.getElementById('expenseNote').value;
+        const memberId = document.getElementById('expenseMember').value;
+
+        const response = await fetch('/expenses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token') // Adjust as necessary
+            },
+            body: JSON.stringify({ title, amount, date, note, memberId })
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Error adding expense');
+        }
+    });
+
+    // Edit Expense Function
+    function editExpense(id, title, amount, date, note, memberId) {
+        document.getElementById('editExpenseId').value = id;
+        document.getElementById('editExpenseTitle').value = title;
+        document.getElementById('editExpenseAmount').value = amount;
+        document.getElementById('editExpenseDate').value = new Date(date).toISOString().split('T')[0];
+        document.getElementById('editExpenseNote').value = note;
+        document.getElementById('editExpenseMember').value = memberId;
+    }
+
+    document.getElementById('editExpenseForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('editExpenseId').value;
+        const title = document.getElementById('editExpenseTitle').value;
+        const amount = document.getElementById('editExpenseAmount').value;
+        const date = document.getElementById('editExpenseDate').value;
+        const note = document.getElementById('editExpenseNote').value;
+        const memberId = document.getElementById('editExpenseMember').value;
+
+        const response = await fetch(`/expenses/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token') // Adjust as necessary
+            },
+            body: JSON.stringify({ title, amount, date, note, memberId })
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Error updating expense');
+        }
+    });
+
+    // Delete Expense Function
+    async function deleteExpense(id) {
+        const response = await fetch(`/expenses/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token') // Adjust as necessary
+            },
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Error deleting expense');
+        }
+    }
+
+    document.getElementById('addMemberForm').addEventListener('submit', async function(e) {
+    e.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData); // Convert FormData to a plain object
+
+    // Make a POST request to add the member
+    const response = await fetch('/members', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(data) // Send data as JSON
+    });
+
+    const result = await response.json(); // Parse the JSON response
+    if (result.success) {
+        location.reload(); // Reload the page on success
+    } else {
+        alert('Error adding member: ' + result.message); // Alert on error
+    }
+});
+
+</script>
